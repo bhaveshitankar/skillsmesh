@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { api, type Skill } from '../lib/api'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { api, isLoggedIn, setReturnTo, type Skill } from '../lib/api'
 import RaxTeamLogo from '../components/RaxTeamLogo'
 import UseWithAI from '../components/UseWithAI'
 
 export default function SharedSkillPage() {
   const { token, slug } = useParams<{ token?: string; slug?: string }>()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [editNote, setEditNote] = useState('')
   const [related, setRelated] = useState<Array<{ seoSlug: string; name: string; description: string }>>([])
   const [skill, setSkill] = useState<Skill | null>(null)
   const [loading, setLoading] = useState(true)
@@ -27,6 +30,27 @@ export default function SharedSkillPage() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [token, slug])
+
+  // Editing a PUBLIC skill needs an account: sign in first, then only the author can edit.
+  async function editPublic(sk: Skill) {
+    const here = `/library/${slug}?edit=1`
+    if (!isLoggedIn()) { setReturnTo(here); navigate('/login'); return }
+    try {
+      const { user } = await api.me()
+      if (user.id === sk.authorId) navigate(`/skills/${sk.id}`)
+      else setEditNote('Only the author of this skill can edit it.')
+    } catch {
+      setReturnTo(here) // token missing/expired: sign in again
+      navigate('/login')
+    }
+  }
+
+  // Came back from sign-in with ?edit=1: continue where the user left off.
+  useEffect(() => {
+    if (!slug || !skill || searchParams.get('edit') !== '1') return
+    setSearchParams({}, { replace: true })
+    void editPublic(skill)
+  }, [skill])
 
   async function save() {
     if (!token || !skill) return
@@ -81,6 +105,14 @@ export default function SharedSkillPage() {
           <span className="font-semibold text-gray-800 text-sm">RaxTeam</span>
         </Link>
         <div className="flex items-center gap-2">
+          {slug && (
+            <button
+              onClick={() => editPublic(skill)}
+              className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
+            >
+              {isLoggedIn() ? 'Edit' : 'Sign in to edit'}
+            </button>
+          )}
           <UseWithAI skill={skill} shareUrl={slug ? `${window.location.origin}/library/${slug}.md` : window.location.origin + window.location.pathname} />
           <button
             onClick={copyLink}
@@ -98,6 +130,10 @@ export default function SharedSkillPage() {
       </header>
 
       <div className="max-w-2xl mx-auto py-10 px-4 space-y-4">
+        {editNote && (
+          <div role="alert" className="text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3">{editNote}</div>
+        )}
+
         {/* Status badge */}
         <div className="flex items-center gap-2">
           <span className={`text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide ${

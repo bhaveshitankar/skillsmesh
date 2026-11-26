@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { setToken } from '../lib/api'
+import { setToken, popReturnTo } from '../lib/api'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8787'
 
@@ -28,7 +28,7 @@ export default function AuthCallbackPage() {
       .then(data => {
         setToken(data.apiKey)
         // Replace history entry so back button doesn't return to /auth/callback
-        navigate('/skills', { replace: true })
+        navigate(popReturnTo() ?? '/skills', { replace: true })
       })
       .catch(() => setError('Sign-in failed. Please try again.'))
   }, [])

@@ -201,7 +201,7 @@ pub.get('/library/:slug', async (c) => {
     .slice(0, 4)
     .map(x => ({ seoSlug: slugs.get(x.s.id)!, name: x.s.name, description: x.s.description }))
 
-  const { orgId: _o, authorId: _a, ...safe } = publicSkill(skill) as Record<string, unknown>
+  const { orgId: _o, ...safe } = publicSkill(skill) as Record<string, unknown>
   return c.json({ skill: { ...safe, seoSlug: slug }, related }, 200, { 'Cache-Control': 'public, max-age=300' })
 })
 

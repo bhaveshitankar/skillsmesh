@@ -16,6 +16,20 @@ export function isLoggedIn(): boolean {
   return !!getToken()
 }
 
+// Where to send the user after sign-in (survives the OAuth round trip in this tab).
+const RETURN_KEY = 'raxteam_return_to'
+
+export function setReturnTo(path: string) {
+  sessionStorage.setItem(RETURN_KEY, path)
+}
+
+/** One-shot read. Only same-site absolute paths are accepted (no open redirects). */
+export function popReturnTo(): string | null {
+  const p = sessionStorage.getItem(RETURN_KEY)
+  sessionStorage.removeItem(RETURN_KEY)
+  return p && p.startsWith('/') && !p.startsWith('//') ? p : null
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken()
   const res = await fetch(`${API_URL}${path}`, {
