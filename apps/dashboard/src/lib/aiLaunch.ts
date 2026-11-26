@@ -39,7 +39,9 @@ export function buildPrompt(skill: { name: string; promptTemplate: string }): st
     skill.promptTemplate.trim(),
     '--- END SKILL ---',
     '',
-    'My request: ',
+    // Some apps (ChatGPT) send the prompt immediately, others let the user edit it first.
+    // This ending works for both: edit it to add a request, or send it as-is to be asked.
+    'My request: (none yet - confirm in one line that you have the skill, then ask what I need.)',
   ].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n')
 }
 
@@ -62,7 +64,7 @@ export function launch(target: AiTarget, prompt: string, shareUrl: string): Laun
   if (!fits) {
     // Too long for a link (or no prefill support): copy the full prompt, send a short pointer.
     try { void navigator.clipboard?.writeText(prompt); copied = true } catch { /* ignore */ }
-    text = `Use this skill: ${shareUrl}\n(The full skill text is on my clipboard - paste it here if you cannot open the link.)\n\nMy request: `
+    text = `Use this skill: ${shareUrl}\n(The full skill text is on my clipboard - paste it here if you cannot open the link.)\n\nMy request: (none yet - confirm in one line that you have the skill, then ask what I need.)`
   }
 
   const href = target.copyOnly ? target.url('', shareUrl) : target.url(text, shareUrl)
