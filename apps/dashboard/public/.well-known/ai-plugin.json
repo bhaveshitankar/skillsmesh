@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SkillMesh",
+  "name_for_model": "skillmesh",
+  "description_for_human": "Find and use community-approved AI prompt templates (skills). Resolve the best skill for any task, list your org's skills, or submit new ones.",
+  "description_for_model": "SkillMesh is a shared library of approved AI prompt templates called skills. Use findPublicSkill (GET /public/p?q=...) for open access — returns plain text in the format: skill name, description, then the prompt template, separated by newlines. Fill in any {{variable}} placeholders before using the template. Use resolve_skill for authenticated vector search with private skills.",
+  "auth": {
+    "type": "user_http",
+    "authorization_type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://api.raxteam.com/openapi.json"
+  },
+  "logo_url": "https://raxteam.com/logo.png",
+  "contact_email": "hello@raxteam.com",
+  "legal_info_url": "https://raxteam.com"
+}

@@ -1,0 +1,20 @@
+name = "skillmesh-queues"
+main = "src/embed-batch.ts"
+compatibility_date = "2024-12-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "skillmesh-db"
+database_id = "dd3f8597-4d8a-4f5b-a0f2-414a98a9e0ac"
+
+[[vectorize]]
+binding = "VECTORIZE_384"
+index_name = "skills-384"
+
+[ai]
+binding = "AI"
+
+[[queues.consumers]]
+queue = "skillmesh-embed-batch"
+max_batch_size = 10
+max_batch_timeout = 30

@@ -1,0 +1,118 @@
+# RaxTeam
+
+> RaxTeam is a shared library of curated AI prompt templates ("skills") for engineering teams. Teams approve skills once; every AI tool in the org uses them automatically via the Model Context Protocol (MCP).
+
+## What RaxTeam does
+
+RaxTeam lets teams build a curated library of reusable prompt templates called "skills". Instead of every developer writing their own prompts from scratch, the team approves quality prompts once and every AI tool in the org automatically uses them via MCP.
+
+Skills are resolved by semantic similarity — when an LLM calls `resolve_skill("summarize a support ticket")`, RaxTeam returns the best matching approved template and any attached RAG context.
+
+## Key concepts
+
+- **Skill**: A named prompt template with `{{variable}}` placeholders, trigger phrases, tags, and a visibility setting (`private` / `shared` / `public`).
+- **Resolve**: Given a natural-language query, the API finds the best matching approved skill using vector similarity search (384-dim free, 768-dim pro).
+- **Approval workflow**: Skills are reviewed by org admins/curators before going live. Configurable threshold (1–20 approvals required).
+- **Visibility**: `private` = org only, `shared` = invited orgs, `public` = community marketplace.
+- **MCP server**: `@raxteam/mcp` — npm package exposing 4 tools to any MCP-compatible LLM host.
+- **RAG context**: Pro plan skills can have files attached. Relevant chunks are returned alongside the prompt template.
+- **Voting**: Public skills can be upvoted or downvoted. Highest-voted skills surface first.
+
+## API
+
+Base URL: `https://api.raxteam.com`
+
+Authentication: `Authorization: Bearer sk-<api-key>` (obtain from raxteam.com/integration)
+
+### Resolve a skill (main use case)
+```
+POST /resolve
+Content-Type: application/json
+{"query": "summarize a support ticket"}
+```
+Returns: `{ found: true, match: { skill: { name, description, promptTemplate }, score }, ragContext }`
+
+### List skills (authenticated)
+```
+GET /skills
+GET /skills?visibility=public
+```
+
+### Get a single skill
+```
+GET /skills/:id
+```
+
+### Submit a skill
+```
+POST /skills
+{"name", "description", "promptTemplate", "triggers": [], "tags": [], "visibility": "private"}
+```
+
+### Public skill lookup (no API key, plain text response)
+```
+GET /public/p?q=wish+happy+birthday
+```
+Returns plain text: skill name, description, then the prompt template — separated by blank lines.
+Rate limited: 10 requests/minute per IP.
+Fill any `{{variable}}` placeholders before using the template.
+
+### Public skills feed
+```
+GET /public/skills?page=1&search=birthday&limit=24
+```
+
+### Vote on a public skill
+```
+POST /public/skills/:id/vote
+{"direction": "up" | "down"}
+```
+
+
+
+## MCP integration
+
+Install the MCP server in your LLM host config:
+
+```json
+{
+  "mcpServers": {
+    "raxteam": {
+      "command": "npx",
+      "args": ["-y", "@raxteam/mcp"],
+      "env": {
+        "RAXTEAM_API_KEY": "sk-your-api-key"
+      }
+    }
+  }
+}
+```
+
+### MCP tools exposed
+
+| Tool | Description |
+|------|-------------|
+| `resolve_skill` | Find best matching approved skill for a task description |
+| `list_skills` | List all approved skills available to your org |
+| `skill_submit` | Submit a new skill draft for team review |
+| `skill_offer_extraction` | After completing a task, draft a reusable skill from what you did |
+
+## Plans
+
+| Feature | Free | Pro |
+|---------|------|-----|
+| Private skills | 25 | Unlimited |
+| Resolve calls/month | 500 | Unlimited |
+| Members | 5 | Unlimited |
+| Embedding dimensions | 384 | 768 |
+| RAG file attachments | — | ✓ |
+| Analytics | — | ✓ |
+| Shared visibility | — | ✓ |
+
+## Links
+
+- Dashboard: https://raxteam.com
+- API: https://api.raxteam.com
+- Integration guide: https://raxteam.com/integration
+- MCP package: https://www.npmjs.com/package/@raxteam/mcp
+- Contact: hello@raxteam.com

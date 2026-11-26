@@ -1,0 +1,43 @@
+name = "skillmesh-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+[[routes]]
+pattern = "api.raxteam.com"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "skillmesh-db"
+database_id = "dd3f8597-4d8a-4f5b-a0f2-414a98a9e0ac"
+migrations_dir = "../../packages/db/drizzle/migrations"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "970b2153478d4f9ea48bf3e45cc0df0f"
+
+[[vectorize]]
+binding = "VECTORIZE_384"
+index_name = "skills-384"
+
+[[vectorize]]
+binding = "VECTORIZE_768"
+index_name = "skills-768"
+
+# Uncomment after enabling R2 in Cloudflare Dashboard → R2 Object Storage
+# [[r2_buckets]]
+# binding = "ASSETS"
+# bucket_name = "skillmesh-assets"
+
+[ai]
+binding = "AI"
+
+[vars]
+# Optional New Relic integration — set via: wrangler secret put NR_LICENSE_KEY --name skillmesh-api
+# NR_REGION can be set to "eu" for EU data center (leave unset for US)
+NR_REGION = ""
+
+[[queues.producers]]
+binding = "EMBED_QUEUE"
+queue = "skillmesh-embed-batch"

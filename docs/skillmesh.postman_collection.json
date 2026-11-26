@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "RaxTeam API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "RaxTeam (SkillMesh) API — shared AI prompt skills, workflows, supervisors, and chat endpoints for teams. Base URL: https://api.raxteam.com"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.raxteam.com" },
+    { "key": "token", "value": "sk-xxxx", "description": "Your API key from Profile → API Key" },
+    { "key": "skill_id", "value": "" },
+    { "key": "workflow_id", "value": "" },
+    { "key": "org_slug", "value": "your-org-slug" },
+    { "key": "widget_token", "value": "" },
+    { "key": "endpoint_token", "value": "" },
+    { "key": "secret_id", "value": "" },
+    { "key": "endpoint_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Health Check", "request": { "method": "GET", "url": "{{base_url}}/health", "description": "Returns {ok: true} when the API is running." } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "GitHub OAuth - Redirect", "request": { "method": "GET", "url": "{{base_url}}/auth/github", "description": "Open in browser — redirects to GitHub login." } },
+        { "name": "Me", "request": { "method": "GET", "url": "{{base_url}}/me", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "description": "Returns user + org including plan and trialEndsAt." } }
+      ]
+    },
+    {
+      "name": "Skills",
+      "item": [
+        { "name": "List Skills", "request": { "method": "GET", "url": { "raw": "{{base_url}}/skills?visibility=public", "host": ["{{base_url}}"], "path": ["skills"], "query": [{ "key": "visibility", "value": "public" }] }, "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Create Skill (Draft)", "event": [{ "listen": "test", "script": { "exec": ["const res = pm.response.json();", "if (res.id) pm.collectionVariables.set('skill_id', res.id);"], "type": "text/javascript" } }], "request": { "method": "POST", "url": "{{base_url}}/skills", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Summarize PR\",\n  \"description\": \"Summarizes a GitHub pull request into bullet points\",\n  \"promptTemplate\": \"Summarize this PR in 5 bullet points:\\n\\nTitle: {{title}}\\nBody: {{body}}\",\n  \"triggers\": [\"summarize pr\", \"pr summary\"],\n  \"tags\": [\"github\", \"pr\"],\n  \"visibility\": \"private\",\n  \"tokenEstimate\": 200\n}" } } },
+        { "name": "Get Skill", "request": { "method": "GET", "url": "{{base_url}}/skills/{{skill_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Update Skill (Draft only)", "request": { "method": "PATCH", "url": "{{base_url}}/skills/{{skill_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated description\",\n  \"tags\": [\"github\", \"pr\", \"review\"]\n}" } } },
+        { "name": "Submit for Review", "request": { "method": "POST", "url": "{{base_url}}/skills/{{skill_id}}/submit", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Delete Skill", "request": { "method": "DELETE", "url": "{{base_url}}/skills/{{skill_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
+      ]
+    },
+    {
+      "name": "Approvals",
+      "item": [
+        { "name": "Approve Skill", "request": { "method": "POST", "url": "{{base_url}}/skills/{{skill_id}}/approve", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"comment\": \"Looks good, approved!\"\n}" } } },
+        { "name": "Reject Skill", "request": { "method": "POST", "url": "{{base_url}}/skills/{{skill_id}}/reject", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"comment\": \"Needs more specific triggers\"\n}" } } },
+        { "name": "Revert to Draft", "request": { "method": "POST", "url": "{{base_url}}/skills/{{skill_id}}/revert", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
+      ]
+    },
+    {
+      "name": "Resolve",
+      "item": [
+        { "name": "Resolve Skill", "request": { "method": "POST", "url": "{{base_url}}/resolve", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"query\": \"summarize a pull request\"\n}" }, "description": "Vector-matches the query against approved skills. Returns the best matching skill + prompt template." } }
+      ]
+    },
+    {
+      "name": "Workflows (Pro)",
+      "description": "Orchestrate skills, conditions, MCP tools, and sub-workflows. Requires Pro plan.",
+      "item": [
+        { "name": "List Workflows", "request": { "method": "GET", "url": { "raw": "{{base_url}}/workflows?type=orchestrator&limit=20", "host": ["{{base_url}}"], "path": ["workflows"], "query": [{ "key": "type", "value": "orchestrator", "description": "orchestrator | supervisor" }, { "key": "limit", "value": "20" }] }, "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Get Workflow", "request": { "method": "GET", "url": "{{base_url}}/workflows/{{workflow_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Create Workflow", "event": [{ "listen": "test", "script": { "exec": ["const res = pm.response.json();", "if (res.id) pm.collectionVariables.set('workflow_id', res.id);"], "type": "text/javascript" } }], "request": { "method": "POST", "url": "{{base_url}}/workflows", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Support Orchestrator\",\n  \"description\": \"Routes support queries through the right skills\",\n  \"type\": \"orchestrator\",\n  \"tags\": [\"support\"],\n  \"definition\": {\n    \"nodes\": [\n      { \"id\": \"n1\", \"type\": \"input\", \"position\": { \"x\": 100, \"y\": 100 }, \"data\": { \"label\": \"Input\" } },\n      { \"id\": \"n2\", \"type\": \"skill\", \"position\": { \"x\": 300, \"y\": 100 }, \"data\": { \"label\": \"Classify Intent\", \"skillId\": \"{{skill_id}}\", \"description\": \"Classify incoming request\" } },\n      { \"id\": \"n3\", \"type\": \"output\", \"position\": { \"x\": 500, \"y\": 100 }, \"data\": { \"label\": \"Output\" } }\n    ],\n    \"edges\": [\n      { \"id\": \"e1\", \"source\": \"n1\", \"target\": \"n2\" },\n      { \"id\": \"e2\", \"source\": \"n2\", \"target\": \"n3\" }\n    ],\n    \"inputSchema\": [{ \"name\": \"input\", \"description\": \"User request\", \"required\": true }]\n  }\n}" } } },
+        { "name": "Update Workflow", "request": { "method": "PATCH", "url": "{{base_url}}/workflows/{{workflow_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"description\": \"Updated description\"\n}" } } },
+        { "name": "Publish Workflow", "request": { "method": "POST", "url": "{{base_url}}/workflows/{{workflow_id}}/publish", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "description": "draft → published. Only published workflows can be used in chat or as sub-workflows." } },
+        { "name": "Run Workflow", "request": { "method": "POST", "url": "{{base_url}}/workflows/{{workflow_id}}/run", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"input\": \"How do I reset my password?\"\n}" }, "description": "Executes a published workflow. Returns run ID, output, and per-node step results." } },
+        { "name": "Get Workflow Runs", "request": { "method": "GET", "url": "{{base_url}}/workflows/{{workflow_id}}/runs", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Delete Workflow", "request": { "method": "DELETE", "url": "{{base_url}}/workflows/{{workflow_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
+      ]
+    },
+    {
+      "name": "Skill Builder (Pro)",
+      "description": "Auto-generate skills from documents or URLs. 10 jobs/day per org.",
+      "item": [
+        { "name": "Upload File", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/upload", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "description": ".txt, .md, .csv, .html — max 5MB" }] }, "description": "Returns jobId + text preview. jobId expires in 1 hour." } },
+        { "name": "From URL", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/url", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"url\": \"https://docs.example.com/api-reference\"\n}" } } },
+        { "name": "Generate Skills", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/generate", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"jobId\": \"<jobId from upload/url>\",\n  \"topicFocus\": \"customer support\"\n}" }, "description": "Returns {skills: [...], error?: string}. Error is a string description, not a status code failure." } },
+        { "name": "Create Skills", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/create", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"skills\": [{\n    \"name\": \"Answer FAQ\",\n    \"description\": \"Answers common questions\",\n    \"promptTemplate\": \"You are a support expert. {{instruction}}\",\n    \"triggers\": [\"faq\", \"how do i\"],\n    \"tags\": [\"support\"]\n  }]\n}" } } },
+        { "name": "Build Orchestrator", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/orchestrator", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"skillIds\": [\"skill-id-1\", \"skill-id-2\"],\n  \"goal\": \"Handle customer support — classify intent, answer FAQs, escalate complex issues\",\n  \"name\": \"Customer Support Orchestrator\"\n}" }, "description": "AI chains the given skills into an orchestrator workflow. Returns {workflow: {id, name, type, status}}." } },
+        { "name": "Build Supervisor", "request": { "method": "POST", "url": "{{base_url}}/skill-builder/supervisor", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"orchestratorIds\": [\"workflow-id-1\", \"workflow-id-2\"],\n  \"name\": \"Main Supervisor\",\n  \"description\": \"Routes all customer-facing requests to the correct orchestrator\"\n}" }, "description": "AI designs a supervisor with routing, validation, and response standardisation. Returns {workflow: {id, name, type, status}}." } }
+      ]
+    },
+    {
+      "name": "Secrets Manager (Pro)",
+      "description": "AES-GCM-256 encrypted credential storage. Reference in workflow nodes via {{secret:MY_KEY}}.",
+      "item": [
+        { "name": "List Secrets", "request": { "method": "GET", "url": "{{base_url}}/secrets", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "description": "Returns metadata only — values are never returned." } },
+        { "name": "Create Secret", "event": [{ "listen": "test", "script": { "exec": ["const res = pm.response.json();", "if (res.id) pm.collectionVariables.set('secret_id', res.id);"], "type": "text/javascript" } }], "request": { "method": "POST", "url": "{{base_url}}/secrets", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"OPENAI_API_KEY\",\n  \"value\": \"sk-...\",\n  \"scope\": \"org\"\n}" }, "description": "Name: UPPER_SNAKE_CASE. scope: 'org' (shared) or 'user' (personal)." } },
+        { "name": "Update Secret", "request": { "method": "PUT", "url": "{{base_url}}/secrets/{{secret_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"value\": \"sk-new-value\"\n}" } } },
+        { "name": "Delete Secret", "request": { "method": "DELETE", "url": "{{base_url}}/secrets/{{secret_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } }
+      ]
+    },
+    {
+      "name": "Chat Endpoints (Pro)",
+      "description": "Per-supervisor chat endpoints. One for external users, one for dev team, one for sales — each with its own token and embed code.",
+      "item": [
+        { "name": "List Endpoints", "request": { "method": "GET", "url": "{{base_url}}/chat-endpoints", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Create Endpoint", "event": [{ "listen": "test", "script": { "exec": ["const res = pm.response.json();", "if (res.endpoint?.id) pm.collectionVariables.set('endpoint_id', res.endpoint.id);", "if (res.endpoint?.token) pm.collectionVariables.set('endpoint_token', res.endpoint.token);"], "type": "text/javascript" } }], "request": { "method": "POST", "url": "{{base_url}}/chat-endpoints", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Customer Support Chat\",\n  \"workflowId\": \"{{workflow_id}}\"\n}" }, "description": "workflowId is optional. Returns {endpoint: {id, token, name}}." } },
+        { "name": "Update Endpoint / Config", "request": { "method": "PATCH", "url": "{{base_url}}/chat-endpoints/{{endpoint_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"config\": {\n    \"chatTitle\": \"Support Chat\",\n    \"botName\": \"Aria\",\n    \"welcomeMessage\": \"Hi! How can I help?\",\n    \"accentColor\": \"#4f46e5\",\n    \"showPoweredBy\": true\n  }\n}" } } },
+        { "name": "Rotate Token", "request": { "method": "PATCH", "url": "{{base_url}}/chat-endpoints/{{endpoint_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"regenerateToken\": true\n}" }, "description": "Old embed links stop working immediately." } },
+        { "name": "Delete Endpoint", "request": { "method": "DELETE", "url": "{{base_url}}/chat-endpoints/{{endpoint_id}}", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Get Public Endpoint Config", "request": { "method": "GET", "url": "{{base_url}}/public/endpoint/{{endpoint_token}}/config", "description": "No auth. Returns safe widget config (title, bot name, accent color). Does not expose API keys." } }
+      ]
+    },
+    {
+      "name": "Org Chat (Pro)",
+      "description": "Org-wide chatbot powered by skills or a workflow. Requires Pro plan.",
+      "item": [
+        { "name": "Get Chat Config", "request": { "method": "GET", "url": "{{base_url}}/chat/config", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Update Chat Config", "request": { "method": "PATCH", "url": "{{base_url}}/chat/config", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"provider\": \"cloudflare\",\n  \"systemPrompt\": \"You are a helpful assistant.\",\n  \"widgetEnabled\": true,\n  \"chatTitle\": \"Team AI\",\n  \"botName\": \"Aria\",\n  \"accentColor\": \"#4f46e5\"\n}" } } },
+        { "name": "Send Message", "request": { "method": "POST", "url": "{{base_url}}/chat", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"message\": \"What skills do we have for code review?\",\n  \"history\": []\n}" } } }
+      ]
+    },
+    {
+      "name": "Public Widget Chat",
+      "description": "Unauthenticated endpoint for embeddable org widget.",
+      "item": [
+        { "name": "Widget Chat Message", "request": { "method": "POST", "url": "{{base_url}}/public/chat/{{org_slug}}", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"{{widget_token}}\",\n  \"message\": \"What skills does this org have?\",\n  \"history\": []\n}" } } }
+      ]
+    },
+    {
+      "name": "Billing (Pro)",
+      "description": "Razorpay subscription management and free trial.",
+      "item": [
+        { "name": "Start Free Trial", "request": { "method": "POST", "url": "{{base_url}}/billing/start-trial", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "description": "Activates 15-day Pro trial. Free plan only, once per org. No payment required. Returns {ok: true, trialEndsAt}." } },
+        { "name": "Create Payment Order", "request": { "method": "POST", "url": "{{base_url}}/billing/order", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"plan\": \"pro_monthly\"\n}" }, "description": "plan: 'pro_monthly' (₹2,999/mo) or 'pro_annual' (₹23,999/yr). Returns orderId + Razorpay keyId." } },
+        { "name": "Verify Payment", "request": { "method": "POST", "url": "{{base_url}}/billing/verify", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"razorpay_payment_id\": \"pay_xxx\",\n  \"razorpay_order_id\": \"order_xxx\",\n  \"razorpay_signature\": \"sig_xxx\",\n  \"plan\": \"pro_monthly\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Playground (Free AI)",
+      "description": "Run prompts via Cloudflare AI. 5/day free, 50/day Pro.",
+      "item": [
+        { "name": "Check Usage", "request": { "method": "GET", "url": "{{base_url}}/playground/usage", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+        { "name": "Run Prompt", "request": { "method": "POST", "url": "{{base_url}}/playground/run", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"prompt\": \"Summarize this PR in 5 bullet points:\\n\\nTitle: Add dark mode\\nBody: Adds theme toggle.\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Usage",
+      "item": [
+        { "name": "Log Usage Event", "request": { "method": "POST", "url": "{{base_url}}/usage", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"skillId\": \"{{skill_id}}\",\n  \"queryText\": \"summarize a pull request\",\n  \"matchScore\": 0.87,\n  \"tokensUsed\": 180,\n  \"tokensSaved\": 320,\n  \"outcome\": \"used\"\n}" } } }
+      ]
+    }
+  ]
+}
