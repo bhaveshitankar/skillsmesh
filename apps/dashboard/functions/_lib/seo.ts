@@ -49,8 +49,17 @@ export function skillTitle(name: string): string {
 
 /** Meta description (~155 chars): what it is + how to use it. */
 export function skillDescription(s: LibrarySkill): string {
-  const base = truncate(s.description || s.name, 110)
-  return truncate(`${base} Free AI prompt template for ChatGPT, Claude and Gemini. Copy it or open it in one click.`, 158)
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const desc = (s.description || '').replace(/\s+/g, ' ').trim()
+  // Many skills have a description that just repeats the name: don't repeat it twice.
+  const useful = desc.length >= 25 && norm(desc) !== norm(s.name)
+  const lead = useful ? desc : `${s.name}: a ready-to-use AI prompt template`
+  const sentence = /[.!?…]$/.test(lead) ? lead : `${lead}.`
+  // Add the call-to-action only when it fits; otherwise the description alone fills the snippet.
+  for (const cta of [' Free for ChatGPT, Claude and Gemini. Copy it or open it in one click.', ' Free for ChatGPT, Claude and Gemini.']) {
+    if (sentence.length + cta.length <= 158) return sentence + cta
+  }
+  return truncate(sentence, 158)
 }
 
 export const iso = (ms?: number | null) => (ms ? new Date(ms).toISOString() : undefined)

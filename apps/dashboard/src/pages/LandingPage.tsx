@@ -825,6 +825,7 @@ export default function LandingPage() {
           <a href="/login" className="hover:text-white/60 transition-colors">Sign in</a>
           <span>·</span>
           <a href="/library" className="hover:text-white/60 transition-colors">Prompt Library</a>
+          <span>·</span>
           <a href="/api-docs" className="hover:text-white/60 transition-colors">API Docs</a>
           <span>·</span>
           <a href="/badge" className="hover:text-white/60 transition-colors">Badge</a>
