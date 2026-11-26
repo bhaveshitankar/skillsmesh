@@ -93,6 +93,7 @@ export default function SharedSkillPage() {
     </div>
   )
 
+  const signedIn = isLoggedIn()
   const needsSignIn = !!slug || skill.visibility === 'public'
   const isEditable = !needsSignIn && skill.status === 'draft'
   const isDraft = skill.status === 'draft'
@@ -122,10 +123,10 @@ export default function SharedSkillPage() {
             Copy link
           </button>
           <Link
-            to="/login"
+            to={signedIn ? '/skills' : '/login'}
             className="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
           >
-            Sign in
+            {signedIn ? 'My dashboard' : 'Sign in'}
           </Link>
         </div>
       </header>
@@ -260,7 +261,7 @@ export default function SharedSkillPage() {
         )}
 
         <p className="text-xs text-center text-gray-400">
-          Shared via <a href="https://raxteam.com" className="text-indigo-500 hover:underline">RaxTeam</a> · <Link to="/login" className="text-indigo-500 hover:underline">Sign in to manage your skills</Link>
+          Shared via <a href="https://raxteam.com" className="text-indigo-500 hover:underline">RaxTeam</a> · <Link to={signedIn ? '/skills' : '/login'} className="text-indigo-500 hover:underline">{signedIn ? 'Go to your skills' : 'Sign in to manage your skills'}</Link>
         </p>
       </div>
     </div>

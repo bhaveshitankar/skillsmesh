@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type LibraryItem } from '../lib/api'
+import { api, isLoggedIn, type LibraryItem } from '../lib/api'
 import RaxTeamLogo from '../components/RaxTeamLogo'
 
 export default function LibraryPage() {
@@ -25,7 +25,7 @@ export default function LibraryPage() {
           <RaxTeamLogo size={28} />
           <span className="font-semibold text-gray-800 text-sm">RaxTeam</span>
         </Link>
-        <Link to="/login" className="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">Sign in</Link>
+        <Link to={isLoggedIn() ? '/skills' : '/login'} className="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">{isLoggedIn() ? 'My dashboard' : 'Sign in'}</Link>
       </header>
 
       <main className="max-w-3xl mx-auto py-10 px-4">
