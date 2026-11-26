@@ -824,6 +824,7 @@ export default function LandingPage() {
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-white/20 text-xs">
           <a href="/login" className="hover:text-white/60 transition-colors">Sign in</a>
           <span>·</span>
+          <a href="/library" className="hover:text-white/60 transition-colors">Prompt Library</a>
           <a href="/api-docs" className="hover:text-white/60 transition-colors">API Docs</a>
           <span>·</span>
           <a href="/badge" className="hover:text-white/60 transition-colors">Badge</a>

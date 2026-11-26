@@ -5,7 +5,8 @@ import RaxTeamLogo from '../components/RaxTeamLogo'
 import UseWithAI from '../components/UseWithAI'
 
 export default function SharedSkillPage() {
-  const { token } = useParams<{ token: string }>()
+  const { token, slug } = useParams<{ token?: string; slug?: string }>()
+  const [related, setRelated] = useState<Array<{ seoSlug: string; name: string; description: string }>>([])
   const [skill, setSkill] = useState<Skill | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -17,12 +18,15 @@ export default function SharedSkillPage() {
   const [saveMsg, setSaveMsg] = useState('')
 
   useEffect(() => {
-    if (!token) return
-    api.public.sharedSkill(token)
-      .then(r => { setSkill(r.skill); setDraft(r.skill) })
+    if (!token && !slug) return
+    const load = slug
+      ? api.public.librarySkill(slug).then(r => { setRelated(r.related); return r.skill as Skill })
+      : api.public.sharedSkill(token!).then(r => r.skill)
+    load
+      .then(sk => { setSkill(sk); setDraft(sk); document.title = `${sk.name} – AI Prompt Template | RaxTeam` })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, slug])
 
   async function save() {
     if (!token || !skill) return
@@ -65,7 +69,7 @@ export default function SharedSkillPage() {
     </div>
   )
 
-  const isEditable = skill.status === 'draft'
+  const isEditable = !slug && skill.status === 'draft'
   const isDraft = skill.status === 'draft'
 
   return (
@@ -77,7 +81,7 @@ export default function SharedSkillPage() {
           <span className="font-semibold text-gray-800 text-sm">RaxTeam</span>
         </Link>
         <div className="flex items-center gap-2">
-          <UseWithAI skill={skill} shareUrl={window.location.origin + window.location.pathname} />
+          <UseWithAI skill={skill} shareUrl={slug ? `${window.location.origin}/library/${slug}.md` : window.location.origin + window.location.pathname} />
           <button
             onClick={copyLink}
             className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
@@ -202,6 +206,21 @@ export default function SharedSkillPage() {
             </div>
           )}
         </div>
+
+        {related.length > 0 && (
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-gray-800 mb-3">Related prompt templates</h2>
+            <ul className="space-y-2">
+              {related.map(r => (
+                <li key={r.seoSlug}>
+                  <Link to={`/library/${r.seoSlug}`} className="text-sm text-indigo-600 hover:underline font-medium">{r.name}</Link>
+                  <p className="text-xs text-gray-500 line-clamp-2">{r.description}</p>
+                </li>
+              ))}
+            </ul>
+            <Link to="/library" className="inline-block mt-3 text-xs text-indigo-600 hover:underline">Browse all prompt templates →</Link>
+          </section>
+        )}
 
         <p className="text-xs text-center text-gray-400">
           Shared via <a href="https://raxteam.com" className="text-indigo-500 hover:underline">RaxTeam</a> · <Link to="/login" className="text-indigo-500 hover:underline">Sign in to manage your skills</Link>

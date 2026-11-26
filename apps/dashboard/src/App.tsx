@@ -36,6 +36,7 @@ import BillingSuccessPage from './pages/BillingSuccessPage'
 import ProfilePage from './pages/ProfilePage'
 import ContactPage from './pages/ContactPage'
 import SharedSkillPage from './pages/SharedSkillPage'
+import LibraryPage from './pages/LibraryPage'
 import SuperAdminLoginPage from './pages/SuperAdminLoginPage'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import BadgePage from './pages/BadgePage'
@@ -73,6 +74,8 @@ export default function App() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/join" element={<JoinPage />} />
       <Route path="/s/:token" element={<SharedSkillPage />} />
+      <Route path="/library" element={<LibraryPage />} />
+      <Route path="/library/:slug" element={<SharedSkillPage />} />
       <Route path="/chat/:orgSlug" element={<ChatWidgetPage />} />
       <Route path="/badge" element={<BadgePage />} />
       <Route path="/api-docs" element={<ApiDocsPage />} />

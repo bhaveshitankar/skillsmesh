@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { createDb, schema } from '@skillmesh/db'
 import { eq, and, desc, sql } from 'drizzle-orm'
+import { assignSlugs, publicSkill } from '../lib/seo-slug'
 
 type PublicEnv = {
   Bindings: {
@@ -157,6 +158,53 @@ pub.get('/p', async (c) => {
   })
 })
 
+// ── SEO library ──────────────────────────────────────────────────────────────
+async function loadLibrary(db: ReturnType<typeof createDb>) {
+  const rows = await db.select().from(schema.skills)
+    .where(and(eq(schema.skills.visibility, 'public'), eq(schema.skills.status, 'approved')))
+    .orderBy(desc(schema.skills.upvotes))
+    .limit(1000)
+    .all()
+  return { rows, slugs: assignSlugs(rows) }
+}
+
+// GET /public/library — every public approved skill (no prompt body) with its SEO slug
+pub.get('/library', async (c) => {
+  const db = createDb(c.env.DB)
+  const { rows, slugs } = await loadLibrary(db)
+  const skills = rows.map(s => ({
+    seoSlug: slugs.get(s.id)!,
+    name: s.name,
+    description: s.description,
+    tags: s.tags,
+    upvotes: s.upvotes,
+    useCount: s.useCount,
+    updatedAt: s.publishedAt ?? s.createdAt,
+  }))
+  return c.json({ skills }, 200, { 'Cache-Control': 'public, max-age=300' })
+})
+
+// GET /public/library/:slug — one public approved skill by SEO slug, plus related skills
+pub.get('/library/:slug', async (c) => {
+  const db = createDb(c.env.DB)
+  const slug = c.req.param('slug').toLowerCase()
+  const { rows, slugs } = await loadLibrary(db)
+  const skill = rows.find(s => slugs.get(s.id) === slug)
+  if (!skill) return c.json({ error: 'Skill not found' }, 404)
+
+  const tags = new Set(skill.tags)
+  const related = rows
+    .filter(s => s.id !== skill.id)
+    .map(s => ({ s, overlap: s.tags.filter(t => tags.has(t)).length }))
+    .filter(x => x.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap || b.s.upvotes - a.s.upvotes)
+    .slice(0, 4)
+    .map(x => ({ seoSlug: slugs.get(x.s.id)!, name: x.s.name, description: x.s.description }))
+
+  const { orgId: _o, authorId: _a, ...safe } = publicSkill(skill) as Record<string, unknown>
+  return c.json({ skill: { ...safe, seoSlug: slug }, related }, 200, { 'Cache-Control': 'public, max-age=300' })
+})
+
 // GET /public/skills — paginated public approved skills with vote counts
 pub.get('/skills', async (c) => {
   const db = createDb(c.env.DB)
@@ -196,11 +244,11 @@ pub.get('/skills', async (c) => {
       .limit(limit)
       .offset(offset)
       .all()
-    return c.json({ skills: rows, page, limit })
+    return c.json({ skills: rows.map(publicSkill), page, limit })
   }
 
   const rows = await query.all()
-  return c.json({ skills: rows, page, limit })
+  return c.json({ skills: rows.map(publicSkill), page, limit })
 })
 
 // POST /public/skills/:id/vote
@@ -289,7 +337,12 @@ pub.get('/s/:token', async (c) => {
   const skill = await db.select().from(schema.skills).where(eq(schema.skills.shareToken, token)).get()
   if (!skill) return c.json({ error: 'Share link not found or expired' }, 404)
   const { shareToken: _t, ...safe } = skill
-  return c.json({ skill: safe })
+  // Public approved skills have a canonical /library/<seoSlug> page; share links point there.
+  let seoSlug: string | undefined
+  if (skill.visibility === 'public' && skill.status === 'approved') {
+    seoSlug = (await loadLibrary(db)).slugs.get(skill.id)
+  }
+  return c.json({ skill: { ...safe, seoSlug } })
 })
 
 // PATCH /public/s/:token — collab edit (draft skills only), IP rate limited 10/min

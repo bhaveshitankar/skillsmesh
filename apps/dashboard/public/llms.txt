@@ -2,6 +2,12 @@
 
 > RaxTeam is a shared library of curated AI prompt templates ("skills") for engineering teams. Teams approve skills once; every AI tool in the org uses them automatically via the Model Context Protocol (MCP).
 
+## Prompt library
+
+Free public prompt templates: https://raxteam.com/library
+Plain-text index of every public template (markdown links): https://raxteam.com/llms-skills.txt
+Each template also exists as markdown at https://raxteam.com/library/<slug>.md
+
 ## What RaxTeam does
 
 RaxTeam lets teams build a curated library of reusable prompt templates called "skills". Instead of every developer writing their own prompts from scratch, the team approves quality prompts once and every AI tool in the org automatically uses them via MCP.

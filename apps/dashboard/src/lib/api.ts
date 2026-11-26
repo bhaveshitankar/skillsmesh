@@ -33,6 +33,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export type LibraryItem = {
+  seoSlug: string
+  name: string
+  description: string
+  tags: string[]
+  upvotes: number
+  useCount: number
+  updatedAt: number
+}
+
 export type Skill = {
   id: string
   name: string
@@ -469,6 +479,12 @@ export const api = {
     },
     sharedSkill(token: string): Promise<{ skill: Skill }> {
       return request(`/public/s/${token}`)
+    },
+    library(): Promise<{ skills: LibraryItem[] }> {
+      return request('/public/library')
+    },
+    librarySkill(slug: string): Promise<{ skill: Skill & { seoSlug: string }; related: Array<{ seoSlug: string; name: string; description: string }> }> {
+      return request(`/public/library/${encodeURIComponent(slug)}`)
     },
     collabEdit(token: string, data: Partial<Pick<Skill, 'name' | 'description' | 'promptTemplate' | 'tags' | 'triggers'>>): Promise<{ skill: Skill }> {
       return request(`/public/s/${token}`, { method: 'PATCH', body: JSON.stringify(data) })
