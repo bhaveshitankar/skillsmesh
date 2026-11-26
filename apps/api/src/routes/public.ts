@@ -356,6 +356,8 @@ pub.patch('/s/:token', async (c) => {
   const skill = await db.select().from(schema.skills).where(eq(schema.skills.shareToken, token)).get()
   if (!skill) return c.json({ error: 'Share link not found' }, 404)
   if (skill.status !== 'draft') return c.json({ error: 'Collab editing is only available for draft skills' }, 403)
+  // Public skills are visible to everyone, so anonymous link-edits are not allowed: sign in first.
+  if (skill.visibility === 'public') return c.json({ error: 'Sign in to edit a public skill', code: 'SIGN_IN_REQUIRED' }, 401)
 
   const body = await c.req.json<{ name?: string; description?: string; promptTemplate?: string; tags?: string[]; triggers?: string[] }>()
 

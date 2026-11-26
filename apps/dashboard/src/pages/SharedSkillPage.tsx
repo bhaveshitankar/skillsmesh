@@ -33,7 +33,7 @@ export default function SharedSkillPage() {
 
   // Editing a PUBLIC skill needs an account: sign in first, then only the author can edit.
   async function editPublic(sk: Skill) {
-    const here = `/library/${slug}?edit=1`
+    const here = slug ? `/library/${slug}?edit=1` : `/s/${token}?edit=1`
     if (!isLoggedIn()) { setReturnTo(here); navigate('/login'); return }
     try {
       const { user } = await api.me()
@@ -47,7 +47,7 @@ export default function SharedSkillPage() {
 
   // Came back from sign-in with ?edit=1: continue where the user left off.
   useEffect(() => {
-    if (!slug || !skill || searchParams.get('edit') !== '1') return
+    if (!skill || searchParams.get('edit') !== '1' || (!slug && skill.visibility !== 'public')) return
     setSearchParams({}, { replace: true })
     void editPublic(skill)
   }, [skill])
@@ -93,7 +93,8 @@ export default function SharedSkillPage() {
     </div>
   )
 
-  const isEditable = !slug && skill.status === 'draft'
+  const needsSignIn = !!slug || skill.visibility === 'public'
+  const isEditable = !needsSignIn && skill.status === 'draft'
   const isDraft = skill.status === 'draft'
 
   return (
@@ -105,7 +106,7 @@ export default function SharedSkillPage() {
           <span className="font-semibold text-gray-800 text-sm">RaxTeam</span>
         </Link>
         <div className="flex items-center gap-2">
-          {slug && (
+          {needsSignIn && (
             <button
               onClick={() => editPublic(skill)}
               className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
