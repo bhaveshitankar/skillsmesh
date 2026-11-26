@@ -21,7 +21,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, params, env })
   const url = new URL(request.url)
 
   // Fetch the SPA shell
-  const shellRes = await env.ASSETS.fetch(new Request(new URL('/index.html', url), request))
+  // Pages redirects /index.html -> / (clean URLs), which has no body, so fetch / directly.
+  const shellRes = await env.ASSETS.fetch(new Request(new URL('/', url).toString()))
   let html = await shellRes.text()
 
   let skill: any = null
