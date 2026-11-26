@@ -59,4 +59,4 @@ jobs:
 
       - name: Deploy to Pages
         working-directory: apps/dashboard
-        run: npx wrangler pages deploy dist --project-name skillmesh-dashboard --branch main
+        run: npx wrangler pages deploy dist --project-name skillmesh-dashboard --branch production
