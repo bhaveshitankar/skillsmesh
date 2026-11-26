@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api, type Skill, type SkillAsset, type Org, type SkillVersion, type SkillTestCase, type EvalResult } from '../lib/api'
 import StatusBadge from '../components/StatusBadge'
+import UseWithAI from '../components/UseWithAI'
 
 const ASSET_ICONS: Record<string, string> = {
   image: '🖼️', script: '📜', data: '📊', document: '📄',
@@ -343,15 +344,21 @@ export default function SkillDetailPage() {
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Prompt Template</p>
-            <button
-              onClick={() => navigator.clipboard.writeText(skill.promptTemplate)}
-              className="text-xs text-brand-500 hover:text-brand-700 flex items-center gap-1 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              Copy
-            </button>
+            <div className="flex items-center gap-3">
+              <UseWithAI
+                skill={skill}
+                shareUrl={shareToken ? `${window.location.origin}/s/${shareToken}` : window.location.href}
+              />
+              <button
+                onClick={() => navigator.clipboard.writeText(skill.promptTemplate)}
+                className="text-xs text-brand-500 hover:text-brand-700 flex items-center gap-1 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy
+              </button>
+            </div>
           </div>
           <pre className="p-4 bg-slate-950 rounded-xl text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed border border-slate-800 overflow-x-auto">
             {skill.promptTemplate}

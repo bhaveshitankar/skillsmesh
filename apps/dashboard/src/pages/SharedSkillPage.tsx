@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api, type Skill } from '../lib/api'
 import RaxTeamLogo from '../components/RaxTeamLogo'
+import UseWithAI from '../components/UseWithAI'
 
 export default function SharedSkillPage() {
   const { token } = useParams<{ token: string }>()
@@ -76,6 +77,7 @@ export default function SharedSkillPage() {
           <span className="font-semibold text-gray-800 text-sm">RaxTeam</span>
         </Link>
         <div className="flex items-center gap-2">
+          <UseWithAI skill={skill} shareUrl={window.location.origin + window.location.pathname} />
           <button
             onClick={copyLink}
             className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors"
